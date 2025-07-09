@@ -1,0 +1,88 @@
+
+    const apiKey = "b3a61dc976b21990ac2f81ee958052af";
+    const weatherUrl = "https://api.openweathermap.org/data/2.5/weather?units=metric&";
+    const geoUrl = "https://api.openweathermap.org/geo/1.0/direct?q=";
+
+    const searchBox = document.querySelector(".search input");
+    const searchBtn = document.querySelector(".search button");
+    const suggestionsBox = document.querySelector(".suggestions");
+    const weatherIcon = document.querySelector(".weather-icon");
+    const loader = document.getElementById("loader");
+
+    async function fetchCitySuggestions(query) {
+      const response = await fetch(`${geoUrl}${query}&limit=5&appid=${apiKey}`);
+      const data = await response.json();
+      return data;
+    }
+
+    async function checkWeatherByCoords(lat, lon, cityName) {
+      loader.style.display = "block";
+      document.querySelector(".weather").style.display = "none";
+
+      try {
+        const response = await fetch(`${weatherUrl}lat=${lat}&lon=${lon}&appid=${apiKey}`);
+        const data = await response.json();
+
+        document.querySelector(".city").innerHTML = cityName || data.name;
+        document.querySelector(".temp").innerHTML = Math.round(data.main.temp) + "°c";
+        document.querySelector(".humidity").innerHTML = data.main.humidity + "%";
+        document.querySelector(".wind").innerHTML = data.wind.speed + " km/h";
+
+        const mainWeather = data.weather[0].main;
+        if (mainWeather === "Clouds") {
+          weatherIcon.src = "assets/clouds.png";
+        } else if (mainWeather === "Clear") {
+          weatherIcon.src = "assets/clear.png";
+        } else if (mainWeather === "Rain") {
+          weatherIcon.src = "assets/rain.png";
+        } else if (mainWeather === "Mist") {
+          weatherIcon.src = "assets/mist.png";
+        } else if (mainWeather === "Drizzle") {
+          weatherIcon.src = "assets/drizzle.png";
+        } else if (mainWeather === "Snow") {
+          weatherIcon.src = "assets/snow.png";
+        }
+
+        document.querySelector(".weather").style.display = "block";
+      } catch (error) {
+        alert("Failed to fetch weather data.");
+      } finally {
+        loader.style.display = "none";
+      }
+    }
+
+    searchBox.addEventListener("input", async () => {
+      const query = searchBox.value.trim();
+      if (query.length < 2) {
+        suggestionsBox.innerHTML = "";
+        return;
+      }
+
+      const cities = await fetchCitySuggestions(query);
+      suggestionsBox.innerHTML = "";
+
+      cities.forEach(city => {
+        const option = document.createElement("div");
+        option.classList.add("suggestion-item");
+        option.textContent = `${city.name}, ${city.state || ""}, ${city.country}`;
+        option.addEventListener("click", () => {
+          searchBox.value = `${city.name}, ${city.country}`;
+          suggestionsBox.innerHTML = "";
+          checkWeatherByCoords(city.lat, city.lon, city.name);
+        });
+        suggestionsBox.appendChild(option);
+      });
+    });
+
+    searchBtn.addEventListener("click", async () => {
+      const query = searchBox.value.trim();
+      if (!query) return;
+
+      const cities = await fetchCitySuggestions(query);
+      if (cities.length > 0) {
+        checkWeatherByCoords(cities[0].lat, cities[0].lon, cities[0].name);
+        suggestionsBox.innerHTML = "";
+      } else {
+        alert("City not found!");
+      }
+    });
