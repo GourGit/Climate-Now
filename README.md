@@ -42,8 +42,7 @@ climatenow-weather-app/
 
 ## 🌐 Demo
 
-You can deploy the project using GitHub Pages, Netlify, or Vercel and add the link here:
-https://your-username.github.io/climatenow-weather-app
+[Climate Now: Live Preview](https://gourgit.github.io/Climate-Now/)
 
 ## 📋 License
 
